@@ -60,24 +60,26 @@ for question_id, question_data in all_questions:
         print(f"Generated Answer (Raw): {answer}")
         
         if isinstance(answer, tuple):
-            answer = answer[0]
+            # Extract the relevant part of the answer from the tuple
+            predicted_answer = answer[0]  # Assuming the first element is the predicted answer
+            documents = answer[1]  # Assuming the second element contains retrieved documents (if needed for logging)
+            logits = answer[2]  # Assuming the third element contains logits (for debugging or scoring)
+
+            # Log the retrieved documents for debugging purposes (optional)
+            print(f"Retrieved Documents: {documents}")
+            print(f"Logits: {logits}")
             
-        # Handle cases where the answer is empty or too short
-        if not answer or len(answer.strip()) <= 1:
-            print(f"Generated Answer is empty or incomplete for question ID: {question_id}, retrying...")
-            retry_answer = rag.medrag_answer(question=question, options=options, k=1)
-            if isinstance(retry_answer, tuple):
-                retry_answer = retry_answer[0]
-            if not retry_answer or len(retry_answer.strip()) <= 1:
-                print(f"Retry failed for question ID: {question_id}, skipping.")
-                continue
-            answer = retry_answer
-        
-        # Parse the generated answer and compare with correct answer
-        try:
-            generated_answer_dict = json.loads(answer)
-            generated_choice = generated_answer_dict.get('answer_choice', None)
-        except (json.JSONDecodeError, KeyError):
+            # Check if the predicted answer is valid (e.g., a number or letter that maps to an option)
+            # If `predicted_answer` is a number, convert it to the corresponding option
+            if predicted_answer.isdigit():
+                predicted_answer_index = int(predicted_answer) - 1
+                if 0 <= predicted_answer_index < len(options):
+                    generated_choice = options[predicted_answer_index]
+                else:
+                    generated_choice = None
+            else:
+                generated_choice = predicted_answer  # If the answer is already a letter (e.g., 'A', 'B', 'C', or 'D')
+        else:
             generated_choice = None
 
         if not generated_choice:
