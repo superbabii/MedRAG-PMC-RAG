@@ -20,7 +20,7 @@ with open('medqa.json', 'r') as f:
 # all_questions = all_questions[800:1000]
 
 # Get random questions
-all_questions = random.sample(list(benchmark_data.items()), 5)
+all_questions = random.sample(list(benchmark_data.items()), 50)
 
 # Initialize the MedRAG system
 rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="Textbooks", HNSW=True)
