@@ -68,9 +68,8 @@ for question_id, question_data in all_questions:
             # Log the retrieved documents for debugging purposes (optional)
             print(f"Retrieved Documents: {documents}")
             print(f"Logits: {logits}")
-            
+
             # Check if the predicted answer is valid (e.g., a number or letter that maps to an option)
-            # If `predicted_answer` is a number, convert it to the corresponding option
             if predicted_answer.isdigit():
                 predicted_answer_index = int(predicted_answer) - 1
                 if 0 <= predicted_answer_index < len(options):
@@ -78,7 +77,12 @@ for question_id, question_data in all_questions:
                 else:
                     generated_choice = None
             else:
-                generated_choice = predicted_answer  # If the answer is already a letter (e.g., 'A', 'B', 'C', or 'D')
+                # Check if the predicted answer matches any valid options
+                if predicted_answer in options:
+                    generated_choice = predicted_answer
+                else:
+                    print(f"Invalid predicted answer: {predicted_answer}. Logging and continuing.")
+                    generated_choice = None
         else:
             generated_choice = None
 
