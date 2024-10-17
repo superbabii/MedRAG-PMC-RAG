@@ -66,20 +66,23 @@ class MedRAG:
             prompt,
             return_tensors="pt",
             truncation=True,  # Ensures input is truncated to the max length
-            padding="max_length",  # Pads to the max length
-            max_length=self.max_length
+            max_length=self.max_length,  # Limit input length to model's max length
+            padding="max_length"
         )
         
         # Move the inputs to the appropriate device
         inputs = {key: value.to(self.model.device) for key, value in inputs.items()}
 
-        # Generate text, explicitly setting attention mask to handle padding properly
+        # Calculate remaining tokens for generation
+        max_new_tokens = self.max_length - inputs['input_ids'].shape[1]
+
+        # Generate text, explicitly setting attention mask and using `max_new_tokens`
         outputs = self.model.generate(
             input_ids=inputs['input_ids'],
             attention_mask=inputs['attention_mask'],  # Pass attention mask
-            max_length=self.max_length,
+            max_new_tokens=max_new_tokens,  # Ensure only additional tokens are generated
             eos_token_id=self.tokenizer.eos_token_id,
-            pad_token_id=self.tokenizer.pad_token_id,  # Ensure the correct pad token is used
+            pad_token_id=self.tokenizer.pad_token_id,
             do_sample=False,  # Set sampling to False for deterministic output
             num_beams=1  # You can adjust this if needed
         )
@@ -87,6 +90,7 @@ class MedRAG:
         # Decode the generated output
         ans = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return ans[len(prompt):]  # Return the generated text after the prompt
+
 
     def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir = None, snippets=None, snippets_ids=None, **kwargs):
 
