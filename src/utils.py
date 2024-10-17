@@ -146,61 +146,77 @@ class Retriever:
                 print("Chunking the statpearls corpus...")
                 os.system("python src/data/statpearls.py")
         self.index_dir = os.path.join(self.db_dir, self.corpus_name, "index", self.retriever_name.replace("Query-Encoder", "Article-Encoder"))
-        
-        if os.path.exists(os.path.join(self.index_dir, "faiss.index")):
-            self.index = faiss.read_index(os.path.join(self.index_dir, "faiss.index"))
-            self.metadatas = [json.loads(line) for line in open(os.path.join(self.index_dir, "metadatas.jsonl")).read().strip().split('\n')]
-        else:
-            print("[In progress] Embedding the {:s} corpus with the {:s} retriever...".format(self.corpus_name, self.retriever_name.replace("Query-Encoder", "Article-Encoder")))
-            if self.corpus_name in ["textbooks", "pubmed", "wikipedia"] and self.retriever_name in ["allenai/specter", "facebook/contriever", "ncbi/MedCPT-Query-Encoder"] and not os.path.exists(os.path.join(self.index_dir, "embedding")):
-                print("[In progress] Downloading the {:s} embeddings given by the {:s} model...".format(self.corpus_name, self.retriever_name.replace("Query-Encoder", "Article-Encoder")))
-                os.makedirs(self.index_dir, exist_ok=True)
-                if self.corpus_name == "textbooks":
-                    if self.retriever_name == "allenai/specter":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EYRRpJbNDyBOmfzCOqfQzrsBwUX0_UT8-j_geDPcVXFnig?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                    elif self.retriever_name == "facebook/contriever":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EQqzldVMCCVIpiFV4goC7qEBSkl8kj5lQHtNq8DvHJdAfw?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                    elif self.retriever_name == "ncbi/MedCPT-Query-Encoder":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EQ8uXe4RiqJJm0Tmnx7fUUkBKKvTwhu9AqecPA3ULUxUqQ?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                elif self.corpus_name == "pubmed":
-                    if self.retriever_name == "allenai/specter":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/Ebz8ySXt815FotxC1KkDbuABNycudBCoirTWkKfl8SEswA?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                    elif self.retriever_name == "facebook/contriever":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EWecRNfTxbRMnM0ByGMdiAsBJbGJOX_bpnUoyXY9Bj4_jQ?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                    elif self.retriever_name == "ncbi/MedCPT-Query-Encoder":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EVCuryzOqy5Am5xzRu6KJz4B6dho7Tv7OuTeHSh3zyrOAw?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                elif self.corpus_name == "wikipedia":
-                    if self.retriever_name == "allenai/specter":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/Ed7zG3_ce-JOmGTbgof3IK0BdD40XcuZ7AGZRcV_5D2jkA?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                    elif self.retriever_name == "facebook/contriever":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/ETKHGV9_KNBPmDM60MWjEdsBXR4P4c7zZk1HLLc0KVaTJw?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                    elif self.retriever_name == "ncbi/MedCPT-Query-Encoder":
-                        os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EXoxEANb_xBFm6fa2VLRmAcBIfCuTL-5VH6vl4GxJ06oCQ?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
-                os.system("unzip {:s} -d {:s}".format(os.path.join(self.index_dir, "embedding.zip"), self.index_dir))
-                os.system("rm {:s}".format(os.path.join(self.index_dir, "embedding.zip")))
-                h_dim = 768
+        if "bm25" in self.retriever_name.lower():
+            from pyserini.search.lucene import LuceneSearcher
+            self.metadatas = None
+            self.embedding_function = None
+            if os.path.exists(self.index_dir):
+                self.index = LuceneSearcher(os.path.join(self.index_dir))
             else:
-                h_dim = embed(chunk_dir=self.chunk_dir, index_dir=self.index_dir, model_name=self.retriever_name.replace("Query-Encoder", "Article-Encoder"), **kwarg)
-
-            print("[In progress] Embedding finished! The dimension of the embeddings is {:d}.".format(h_dim))
-            self.index = construct_index(index_dir=self.index_dir, model_name=self.retriever_name.replace("Query-Encoder", "Article-Encoder"), h_dim=h_dim, HNSW=HNSW)
-            print("[Finished] Corpus indexing finished!")
-            self.metadatas = [json.loads(line) for line in open(os.path.join(self.index_dir, "metadatas.jsonl")).read().strip().split('\n')]            
-        if "contriever" in self.retriever_name.lower():
-            self.embedding_function = SentenceTransformer(self.retriever_name, device="cuda" if torch.cuda.is_available() else "cpu")
+                os.system("python -m pyserini.index.lucene --collection JsonCollection --input {:s} --index {:s} --generator DefaultLuceneDocumentGenerator --threads 16".format(self.chunk_dir, self.index_dir))
+                self.index = LuceneSearcher(os.path.join(self.index_dir))
         else:
-            self.embedding_function = CustomizeSentenceTransformer(self.retriever_name, device="cuda" if torch.cuda.is_available() else "cpu")
-        self.embedding_function.eval()
+            if os.path.exists(os.path.join(self.index_dir, "faiss.index")):
+                self.index = faiss.read_index(os.path.join(self.index_dir, "faiss.index"))
+                self.metadatas = [json.loads(line) for line in open(os.path.join(self.index_dir, "metadatas.jsonl")).read().strip().split('\n')]
+            else:
+                print("[In progress] Embedding the {:s} corpus with the {:s} retriever...".format(self.corpus_name, self.retriever_name.replace("Query-Encoder", "Article-Encoder")))
+                if self.corpus_name in ["textbooks", "pubmed", "wikipedia"] and self.retriever_name in ["allenai/specter", "facebook/contriever", "ncbi/MedCPT-Query-Encoder"] and not os.path.exists(os.path.join(self.index_dir, "embedding")):
+                    print("[In progress] Downloading the {:s} embeddings given by the {:s} model...".format(self.corpus_name, self.retriever_name.replace("Query-Encoder", "Article-Encoder")))
+                    os.makedirs(self.index_dir, exist_ok=True)
+                    if self.corpus_name == "textbooks":
+                        if self.retriever_name == "allenai/specter":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EYRRpJbNDyBOmfzCOqfQzrsBwUX0_UT8-j_geDPcVXFnig?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                        elif self.retriever_name == "facebook/contriever":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EQqzldVMCCVIpiFV4goC7qEBSkl8kj5lQHtNq8DvHJdAfw?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                        elif self.retriever_name == "ncbi/MedCPT-Query-Encoder":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EQ8uXe4RiqJJm0Tmnx7fUUkBKKvTwhu9AqecPA3ULUxUqQ?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                    elif self.corpus_name == "pubmed":
+                        if self.retriever_name == "allenai/specter":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/Ebz8ySXt815FotxC1KkDbuABNycudBCoirTWkKfl8SEswA?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                        elif self.retriever_name == "facebook/contriever":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EWecRNfTxbRMnM0ByGMdiAsBJbGJOX_bpnUoyXY9Bj4_jQ?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                        elif self.retriever_name == "ncbi/MedCPT-Query-Encoder":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EVCuryzOqy5Am5xzRu6KJz4B6dho7Tv7OuTeHSh3zyrOAw?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                    elif self.corpus_name == "wikipedia":
+                        if self.retriever_name == "allenai/specter":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/Ed7zG3_ce-JOmGTbgof3IK0BdD40XcuZ7AGZRcV_5D2jkA?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                        elif self.retriever_name == "facebook/contriever":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/ETKHGV9_KNBPmDM60MWjEdsBXR4P4c7zZk1HLLc0KVaTJw?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                        elif self.retriever_name == "ncbi/MedCPT-Query-Encoder":
+                            os.system("wget -O {:s} https://myuva-my.sharepoint.com/:u:/g/personal/hhu4zu_virginia_edu/EXoxEANb_xBFm6fa2VLRmAcBIfCuTL-5VH6vl4GxJ06oCQ?download=1".format(os.path.join(self.index_dir, "embedding.zip")))
+                    os.system("unzip {:s} -d {:s}".format(os.path.join(self.index_dir, "embedding.zip"), self.index_dir))
+                    os.system("rm {:s}".format(os.path.join(self.index_dir, "embedding.zip")))
+                    h_dim = 768
+                else:
+                    h_dim = embed(chunk_dir=self.chunk_dir, index_dir=self.index_dir, model_name=self.retriever_name.replace("Query-Encoder", "Article-Encoder"), **kwarg)
+
+                print("[In progress] Embedding finished! The dimension of the embeddings is {:d}.".format(h_dim))
+                self.index = construct_index(index_dir=self.index_dir, model_name=self.retriever_name.replace("Query-Encoder", "Article-Encoder"), h_dim=h_dim, HNSW=HNSW)
+                print("[Finished] Corpus indexing finished!")
+                self.metadatas = [json.loads(line) for line in open(os.path.join(self.index_dir, "metadatas.jsonl")).read().strip().split('\n')]            
+            if "contriever" in self.retriever_name.lower():
+                self.embedding_function = SentenceTransformer(self.retriever_name, device="cuda" if torch.cuda.is_available() else "cpu")
+            else:
+                self.embedding_function = CustomizeSentenceTransformer(self.retriever_name, device="cuda" if torch.cuda.is_available() else "cpu")
+            self.embedding_function.eval()
 
     def get_relevant_documents(self, question, k=32, id_only=False, **kwarg):
         assert type(question) == str
         question = [question]
 
-        with torch.no_grad():
-            query_embed = self.embedding_function.encode(question, **kwarg)
-        res_ = self.index.search(query_embed, k=k)
-        ids = ['_'.join([self.metadatas[i]["source"], str(self.metadatas[i]["index"])]) for i in res_[1][0]]
-        indices = [self.metadatas[i] for i in res_[1][0]]
+        if "bm25" in self.retriever_name.lower():
+            res_ = [[]]
+            hits = self.index.search(question[0], k=k)
+            res_[0].append(np.array([h.score for h in hits]))
+            ids = [h.docid for h in hits]
+            indices = [{"source": '_'.join(h.docid.split('_')[:-1]), "index": eval(h.docid.split('_')[-1])} for h in hits]
+        else:
+            with torch.no_grad():
+                query_embed = self.embedding_function.encode(question, **kwarg)
+            res_ = self.index.search(query_embed, k=k)
+            ids = ['_'.join([self.metadatas[i]["source"], str(self.metadatas[i]["index"])]) for i in res_[1][0]]
+            indices = [self.metadatas[i] for i in res_[1][0]]
 
         scores = res_[0][0].tolist()
         

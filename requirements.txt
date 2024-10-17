@@ -9,3 +9,4 @@ blobfile
 protobuf
 sentencepiece
 accelerate
+pyserini
