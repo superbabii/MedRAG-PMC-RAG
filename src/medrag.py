@@ -31,13 +31,14 @@ class MedRAG:
 
         self.max_length = 2048
         self.context_length = 1024
+        
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.llm_name,
             cache_dir=self.cache_dir,
             legacy=False  # Switch to new behavior
         )
 
-        self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
+        # self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
 
         self.model = transformers.LlamaForCausalLM.from_pretrained(self.llm_name, cache_dir=self.cache_dir, torch_dtype=torch.bfloat16)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -49,21 +50,11 @@ class MedRAG:
         if self.tokenizer.pad_token is None:
             self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
             self.model.resize_token_embeddings(len(self.tokenizer))
-
         self.model.config.pad_token_id = self.tokenizer.pad_token_id
-
-        if self.model.config.pad_token_id < 0:
-            raise ValueError(f"Invalid pad_token_id: {self.model.config.pad_token_id}.")
-
     
     def _generate_responses(self, messages):
         # Extract the 'content' field from each message
-        text_inputs = [msg["content"] for msg in messages]
-
-        # Join the content of the messages into a single string for processing
-        input_text = "\n".join(text_inputs)
-        
-        print("Input to tokenizer:", input_text)
+        input_text = "\n".join([msg["content"] for msg in messages])
         
         inputs = self.tokenizer(
             input_text,
@@ -83,6 +74,7 @@ class MedRAG:
                 temperature=0.7,
                 pad_token_id=self.model.config.pad_token_id
             )
+            
         return self.tokenizer.decode(generated_ids[0], skip_special_tokens=True)
     
     def _retrieve_context(self, question, k, rrf_k, snippets=None, snippets_ids=None):
@@ -118,31 +110,31 @@ class MedRAG:
 
         return answers[0] if len(answers) == 1 else answers
     
-    def i_medrag_answer(self, question, options=None, k=32, rrf_k=100, save_path=None, n_rounds=4, n_queries=3, qa_cache_path=None):
-        options_text = '\n'.join([f"{key}. {options[key]}" for key in sorted(options.keys())]) if options else ''
-        context = ""
-        qa_cache = []
+    # def i_medrag_answer(self, question, options=None, k=32, rrf_k=100, save_path=None, n_rounds=4, n_queries=3, qa_cache_path=None):
+    #     options_text = '\n'.join([f"{key}. {options[key]}" for key in sorted(options.keys())]) if options else ''
+    #     context = ""
+    #     qa_cache = []
 
-        if qa_cache_path and os.path.exists(qa_cache_path):
-            qa_cache = json.load(open(qa_cache_path))[:n_rounds]
-            if qa_cache:
-                context = qa_cache[-1]
-            n_rounds -= len(qa_cache)
+    #     if qa_cache_path and os.path.exists(qa_cache_path):
+    #         qa_cache = json.load(open(qa_cache_path))[:n_rounds]
+    #         if qa_cache:
+    #             context = qa_cache[-1]
+    #         n_rounds -= len(qa_cache)
 
-        saved_messages = [{"role": "system", "content": self.templates["i_medrag_system"]}]
-        for i in range(n_rounds):
-            prompt = f"{context}\n\n{question}\n\n{options_text}" if context else f"{question}\n\n{options_text}"
-            messages = [{"role": "system", "content": self.templates["i_medrag_system"]}, {"role": "user", "content": prompt}]
-            response = self._generate_responses(messages)
+    #     saved_messages = [{"role": "system", "content": self.templates["i_medrag_system"]}]
+    #     for i in range(n_rounds):
+    #         prompt = f"{context}\n\n{question}\n\n{options_text}" if context else f"{question}\n\n{options_text}"
+    #         messages = [{"role": "system", "content": self.templates["i_medrag_system"]}, {"role": "user", "content": prompt}]
+    #         response = self._generate_responses(messages)
 
-            saved_messages.append({"role": "assistant", "content": response})
-            if "## Answer" in response or "answer is" in response.lower():
-                return response, saved_messages
+    #         saved_messages.append({"role": "assistant", "content": response})
+    #         if "## Answer" in response or "answer is" in response.lower():
+    #             return response, saved_messages
 
-            context += f"\n\n{response}"
-            qa_cache.append(context)
-            if qa_cache_path:
-                with open(qa_cache_path, 'w') as f:
-                    json.dump(qa_cache, f, indent=4)
+    #         context += f"\n\n{response}"
+    #         qa_cache.append(context)
+    #         if qa_cache_path:
+    #             with open(qa_cache_path, 'w') as f:
+    #                 json.dump(qa_cache, f, indent=4)
 
-        return response, saved_messages
+    #     return response, saved_messages
