@@ -8,3 +8,4 @@ datasets
 blobfile
 protobuf
 sentencepiece
+accelerate
