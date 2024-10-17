@@ -23,7 +23,7 @@ with open('medqa.json', 'r') as f:
 all_questions = random.sample(list(benchmark_data.items()), 1)
 
 # Initialize the MedRAG system
-rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="RRF-4", corpus_name="Textbooks", HNSW=True)
+rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="RRF-4", corpus_name="PubMed", HNSW=True)
 
 # Store the results of comparisons
 results = []
@@ -40,7 +40,6 @@ def timeout_handler(signum, frame):
 
 # Set the timeout limit to 60 seconds
 signal.signal(signal.SIGALRM, timeout_handler)
-
 
 def extract_answer_choice(generated_answer):
 
@@ -103,7 +102,7 @@ for question_id, question_data in all_questions:
     # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer = rag.medrag_answer(question=question, options=options, k=1)
+        answer = rag.medrag_answer(question=question, options=options, k=5)
         
         # Debugging: Check the type and raw content of the answer
         print(f"Generated Answer (Raw): {answer}")
