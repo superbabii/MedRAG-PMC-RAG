@@ -40,7 +40,7 @@ class MedRAG:
 
         # self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
 
-        self.model = transformers.LlamaForCausalLM.from_pretrained(self.llm_name, cache_dir=self.cache_dir, torch_dtype=torch.bfloat16)
+        self.model = transformers.LlamaForCausalLM.from_pretrained(self.llm_name, cache_dir=self.cache_dir)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = self.model.to(self.device)
         self._set_pad_token()
@@ -112,32 +112,3 @@ class MedRAG:
                 json.dump(answers, f, indent=4)
 
         return answers[0] if len(answers) == 1 else answers
-    
-    # def i_medrag_answer(self, question, options=None, k=32, rrf_k=100, save_path=None, n_rounds=4, n_queries=3, qa_cache_path=None):
-    #     options_text = '\n'.join([f"{key}. {options[key]}" for key in sorted(options.keys())]) if options else ''
-    #     context = ""
-    #     qa_cache = []
-
-    #     if qa_cache_path and os.path.exists(qa_cache_path):
-    #         qa_cache = json.load(open(qa_cache_path))[:n_rounds]
-    #         if qa_cache:
-    #             context = qa_cache[-1]
-    #         n_rounds -= len(qa_cache)
-
-    #     saved_messages = [{"role": "system", "content": self.templates["i_medrag_system"]}]
-    #     for i in range(n_rounds):
-    #         prompt = f"{context}\n\n{question}\n\n{options_text}" if context else f"{question}\n\n{options_text}"
-    #         messages = [{"role": "system", "content": self.templates["i_medrag_system"]}, {"role": "user", "content": prompt}]
-    #         response = self._generate_responses(messages)
-
-    #         saved_messages.append({"role": "assistant", "content": response})
-    #         if "## Answer" in response or "answer is" in response.lower():
-    #             return response, saved_messages
-
-    #         context += f"\n\n{response}"
-    #         qa_cache.append(context)
-    #         if qa_cache_path:
-    #             with open(qa_cache_path, 'w') as f:
-    #                 json.dump(qa_cache, f, indent=4)
-
-    #     return response, saved_messages
