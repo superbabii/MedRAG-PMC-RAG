@@ -92,8 +92,11 @@ class MedRAG:
         return contexts if contexts else [""]
 
     def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir=None, snippets=None, snippets_ids=None):
+        # Build the options text efficiently
         options_text = '\n'.join([f"{key}. {options[key]}" for key in sorted(options.keys())]) if options else ''
-        contexts = self._retrieve_context(question, k, rrf_k, snippets, snippets_ids) if self.rag else []
+        
+        # Retrieve relevant contexts
+        contexts = self._retrieve_context(question, k, rrf_k, snippets, snippets_ids) if self.rag else [""]
 
         answers = []
         for context in contexts:
