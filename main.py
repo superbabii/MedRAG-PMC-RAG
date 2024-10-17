@@ -107,6 +107,11 @@ for question_id, question_data in all_questions:
         
         if isinstance(answer, tuple):
             answer = answer[0]
+            
+        # Handle cases where the answer is empty or too short
+        if not answer or answer.strip() == ".":
+            print(f"Generated Answer is empty or incomplete for question ID: {question_id}")
+            continue
         
         print(f"Generated Answer (Raw): {answer}")
         
