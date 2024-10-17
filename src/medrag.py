@@ -32,6 +32,12 @@ class MedRAG:
         self.max_length = 2048
         self.context_length = 1024
         
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.llm_name,
+            cache_dir=self.cache_dir,
+            legacy=False  # Switch to new behavior
+        )
+        
         # Load the model using bf16 for optimized memory usage
         self.model = transformers.LlamaForCausalLM.from_pretrained(
             self.llm_name, 
@@ -39,7 +45,9 @@ class MedRAG:
             torch_dtype=torch.bfloat16,
             device_map="auto"  # Automatically split across available devices
         )
-        
+
+        # self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
+
         # Check if CUDA is available (for other use cases, but no need to move model manually)
         if torch.cuda.is_available():
             print("CUDA is available. Model is automatically moved by device_map.")
