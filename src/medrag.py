@@ -92,8 +92,6 @@ class MedRAG:
         ans = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return ans[len(prompt):]  # Return the generated text after the prompt
 
-
-
     def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir = None, snippets=None, snippets_ids=None, **kwargs):
 
         if options is not None:
