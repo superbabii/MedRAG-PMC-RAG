@@ -99,11 +99,11 @@ for question_id, question_data in all_questions:
 
     number_all_questions += 1
     # Use MedRAG to generate the answer with a timeout
-    # signal.alarm(120)  # Set alarm for 60 seconds
+    signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer = rag.medrag_answer(question=question, options=options, k=5)
-        
+        answer, snippets, scores = rag.medrag_answer(question=question, options=options, k=32)
+        print(f"Score: {scores}")
         # Debugging: Check the type and raw content of the answer
         print(f"Generated Answer (Raw): {answer}")
         
