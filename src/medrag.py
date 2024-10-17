@@ -61,26 +61,27 @@ class MedRAG:
         # Apply the chat template to the messages
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         
-        # Tokenize the prompt with truncation and padding
+        # Tokenize the prompt with truncation to ensure it fits within model limits
         inputs = self.tokenizer(
             prompt,
             return_tensors="pt",
-            truncation=True,  # Ensures input is truncated to the max length
-            max_length=self.max_length,  # Limit input length to model's max length
+            truncation=True,  # Ensure input is truncated to max length
+            max_length=self.max_length,  # Set max input length for the model
             padding="max_length"
         )
         
-        # Move the inputs to the appropriate device
+        # Move inputs to the appropriate device
         inputs = {key: value.to(self.model.device) for key, value in inputs.items()}
 
         # Calculate remaining tokens for generation
-        max_new_tokens = self.max_length - inputs['input_ids'].shape[1]
+        input_length = inputs['input_ids'].shape[1]
+        max_new_tokens = max(self.max_length - input_length, 1)  # Ensure max_new_tokens is at least 1
 
         # Generate text, explicitly setting attention mask and using `max_new_tokens`
         outputs = self.model.generate(
             input_ids=inputs['input_ids'],
             attention_mask=inputs['attention_mask'],  # Pass attention mask
-            max_new_tokens=max_new_tokens,  # Ensure only additional tokens are generated
+            max_new_tokens=max_new_tokens,  # Generate new tokens, ensuring it's > 0
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.pad_token_id,
             do_sample=False,  # Set sampling to False for deterministic output
@@ -90,6 +91,7 @@ class MedRAG:
         # Decode the generated output
         ans = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return ans[len(prompt):]  # Return the generated text after the prompt
+
 
 
     def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir = None, snippets=None, snippets_ids=None, **kwargs):
