@@ -20,7 +20,7 @@ with open('medqa.json', 'r') as f:
 # all_questions = all_questions[800:1000]
 
 # Get random questions
-all_questions = random.sample(list(benchmark_data.items()), 1)
+all_questions = random.sample(list(benchmark_data.items()), 5)
 
 # Initialize the MedRAG system
 rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="Textbooks", HNSW=True)
@@ -53,7 +53,7 @@ for question_id, question_data in all_questions:
     # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer = rag.medrag_answer(question=question, options=options, k=1)
+        answer = rag.medrag_answer(question=question, options=options, k=5)
         
         # Debugging: Check the type and raw content of the answer
         print(f"Answer Type: {type(answer)}")
