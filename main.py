@@ -20,7 +20,7 @@ with open('medqa.json', 'r') as f:
 # all_questions = all_questions[800:1000]
 
 # Get random questions
-all_questions = random.sample(list(benchmark_data.items()), 50)
+all_questions = random.sample(list(benchmark_data.items()), 1)
 
 # Initialize the MedRAG system
 rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="Textbooks", HNSW=True)
@@ -85,7 +85,8 @@ for question_id, question_data in all_questions:
         if not generated_choice:
             print(f"No valid answer choice extracted for question ID: {question_id}")
             continue
-
+        
+        print(f"Correct Answer: {generated_choice}")
         # Compare the generated answer with the correct one
         is_correct = correct_answer == generated_choice
         if is_correct:
