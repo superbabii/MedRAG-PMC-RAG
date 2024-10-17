@@ -37,13 +37,14 @@ class MedRAG:
         )
         
         self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
-       
-        # Load the model using bf16 for optimized memory usage
-        self.model = transformers.LlamaForCausalLM.from_pretrained(
-            self.llm_name, 
-            cache_dir=self.cache_dir, 
+
+        self.model = transformers.pipeline(
+            "text-generation",
+            model=self.llm_name,
+            # torch_dtype=torch.float16,
             torch_dtype=torch.bfloat16,
             device_map="auto",
+            model_kwargs={"cache_dir":self.cache_dir},
         )
         
         self.follow_up = follow_up
@@ -58,39 +59,22 @@ class MedRAG:
             self.answer = self.medrag_answer
 
     def generate(self, messages):
-        # Apply the chat template to the messages
+
+        stopping_criteria = None
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        
-        # Tokenize the prompt with truncation to ensure it fits within model limits
-        inputs = self.tokenizer(
+
+        response = self.model(
             prompt,
-            return_tensors="pt",
-            truncation=True,  # Ensure input is truncated to max length
-            max_length=self.max_length,  # Set max input length for the model
-            padding="max_length"
-        )
-        
-        # Move inputs to the appropriate device
-        inputs = {key: value.to(self.model.device) for key, value in inputs.items()}
-
-        # Calculate remaining tokens for generation
-        input_length = inputs['input_ids'].shape[1]
-        max_new_tokens = max(self.max_length - input_length, 1)  # Ensure max_new_tokens is at least 1
-
-        # Generate text, explicitly setting attention mask and using `max_new_tokens`
-        outputs = self.model.generate(
-            input_ids=inputs['input_ids'],
-            attention_mask=inputs['attention_mask'],  # Pass attention mask
-            max_new_tokens=max_new_tokens,  # Generate new tokens, ensuring it's > 0
+            do_sample=False,
             eos_token_id=self.tokenizer.eos_token_id,
-            pad_token_id=self.tokenizer.pad_token_id,
-            do_sample=False,  # Set sampling to False for deterministic output
-            num_beams=1  # You can adjust this if needed
+            pad_token_id=self.tokenizer.eos_token_id,
+            max_length=self.max_length,
+            truncation=True,
+            stopping_criteria=stopping_criteria
         )
-        
-        # Decode the generated output
-        ans = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return ans[len(prompt):]  # Return the generated text after the prompt
+        # ans = response[0]["generated_text"]
+        ans = response[0]["generated_text"][len(prompt):]
+        return ans
 
     def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir = None, snippets=None, snippets_ids=None, **kwargs):
 
