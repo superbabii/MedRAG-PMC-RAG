@@ -68,9 +68,14 @@ class MedRAG:
             print("pad_token_id is valid and positive.")
     
     def _generate_responses(self, messages):
-        """Generate response from model based on input messages."""
+        # Extract the 'content' field from each message
+        text_inputs = [msg["content"] for msg in messages]
+
+        # Join the content of the messages into a single string for processing
+        input_text = "\n".join(text_inputs)
+        
         inputs = self.tokenizer(
-            messages,
+            input_text,
             return_tensors="pt",
             add_special_tokens=False,
             padding=True,
