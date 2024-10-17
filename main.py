@@ -105,6 +105,9 @@ for question_id, question_data in all_questions:
         # Use MedRAG to generate the answer
         answer = rag.medrag_answer(question=question, options=options, k=1)
         
+        if isinstance(answer, tuple):
+            answer = answer[0]
+        
         print(f"Generated Answer (Raw): {answer}")
         
         # Parse the generated answer and compare with correct answer
