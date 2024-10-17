@@ -61,20 +61,27 @@ class MedRAG:
         # Apply the chat template to the messages
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         
-        # Tokenize the prompt
-        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=self.max_length)
+        # Tokenize the prompt with truncation and padding
+        inputs = self.tokenizer(
+            prompt,
+            return_tensors="pt",
+            truncation=True,  # Ensures input is truncated to the max length
+            padding="max_length",  # Pads to the max length
+            max_length=self.max_length
+        )
         
         # Move the inputs to the appropriate device
         inputs = {key: value.to(self.model.device) for key, value in inputs.items()}
 
-        # Use the generate method for text generation
+        # Generate text, explicitly setting attention mask to handle padding properly
         outputs = self.model.generate(
-            inputs['input_ids'],
+            input_ids=inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],  # Pass attention mask
             max_length=self.max_length,
             eos_token_id=self.tokenizer.eos_token_id,
-            pad_token_id=self.tokenizer.eos_token_id,
+            pad_token_id=self.tokenizer.pad_token_id,  # Ensure the correct pad token is used
             do_sample=False,  # Set sampling to False for deterministic output
-            num_beams=1  # Change this if you want beam search or sampling
+            num_beams=1  # You can adjust this if needed
         )
         
         # Decode the generated output
