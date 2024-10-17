@@ -60,29 +60,22 @@ for question_id, question_data in all_questions:
         print(f"Generated Answer (Raw): {answer}")
         
         if isinstance(answer, tuple):
-            # Extract the relevant part of the answer from the tuple
-            predicted_answer = answer[0]  # Assuming the first element is the predicted answer
-            documents = answer[1]  # Assuming the second element contains retrieved documents (if needed for logging)
-            logits = answer[2]  # Assuming the third element contains logits (for debugging or scoring)
+            predicted_answer = answer[0]  # The first element contains the predicted answer
+            documents = answer[1]  # Retrieved documents
+            logits = answer[2]  # Logits for the answer
 
             # Log the retrieved documents for debugging purposes (optional)
             print(f"Retrieved Documents: {documents}")
             print(f"Logits: {logits}")
 
-            # Check if the predicted answer is valid (e.g., a number or letter that maps to an option)
-            if predicted_answer.isdigit():
-                predicted_answer_index = int(predicted_answer) - 1
-                if 0 <= predicted_answer_index < len(options):
-                    generated_choice = options[predicted_answer_index]
-                else:
-                    generated_choice = None
+            # Extract the option from the generated answer using a regular expression
+            match = re.search(r"OPTION\s([A-Z])", predicted_answer)
+            
+            if match:
+                generated_choice = match.group(1)  # Extracted option letter, e.g., 'A', 'B', 'C', etc.
             else:
-                # Check if the predicted answer matches any valid options
-                if predicted_answer in options:
-                    generated_choice = predicted_answer
-                else:
-                    print(f"Invalid predicted answer: {predicted_answer}. Logging and continuing.")
-                    generated_choice = None
+                print(f"Invalid predicted answer: {predicted_answer}. Logging and continuing.")
+                generated_choice = None
         else:
             generated_choice = None
 
