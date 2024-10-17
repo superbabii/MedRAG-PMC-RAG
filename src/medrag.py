@@ -49,11 +49,10 @@ class MedRAG:
         
         # Load the model using bf16 for optimized memory usage
         self.model = transformers.LlamaForCausalLM.from_pretrained(
-            "text-generation",
             self.llm_name, 
+            cache_dir=self.cache_dir, 
             torch_dtype=torch.bfloat16,
-            device_map="auto",
-            model_kwargs={"cache_dir":self.cache_dir}
+            device_map="auto"  # Automatically split across available devices
         )
         
         self.follow_up = follow_up
