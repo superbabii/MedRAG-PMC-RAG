@@ -82,6 +82,13 @@ class MedRAG:
             truncation=True,  # Truncate to handle long prompts
             max_length=self.max_length
         )
+        
+        # Set the pad_token_id explicitly
+        self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        # Move inputs to the same device as the model
+        device = next(self.model.parameters()).device
+        inputs = {key: value.to(device) for key, value in inputs.items()}
 
         # No need to move inputs to the device manually with device_map="auto"
         with torch.no_grad():
