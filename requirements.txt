@@ -9,4 +9,5 @@ blobfile
 protobuf
 sentencepiece
 accelerate
+spacy==3.5
 pyserini
