@@ -70,9 +70,12 @@ class MedRAG:
         self.model.config.pad_token_id = self.tokenizer.pad_token_id
     
     def _generate_responses(self, prompt):
+        # Extract the "content" field from the user's message
+        user_message = next((msg['content'] for msg in messages if msg['role'] == 'user'), "")
+        
         # Simplified text generation
         inputs = self.tokenizer(
-            prompt,
+            user_message,
             return_tensors="pt",
             add_special_tokens=False,
             padding=True,  # Enable padding if batching
