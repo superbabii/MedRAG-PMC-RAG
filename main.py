@@ -23,7 +23,7 @@ with open('medqa.json', 'r') as f:
 all_questions = random.sample(list(benchmark_data.items()), 5)
 
 # Initialize the MedRAG system
-cot = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="Textbooks", HNSW=True)
+rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="Textbooks", HNSW=True)
 
 # Store the results of comparisons
 results = []
@@ -103,7 +103,7 @@ for question_id, question_data in all_questions:
     # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        generated_answer = cot.medrag_answer(question=question, options=options)
+        generated_answer = rag.medrag_answer(question=question, options=options, k=5)
         
         print(f"Generated Answer (Raw): {generated_answer}")
         
