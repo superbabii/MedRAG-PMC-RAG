@@ -37,22 +37,13 @@ class MedRAG:
         )
         
         self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
-
-        # self.model = transformers.pipeline(
-        #     "text-generation",
-        #     model=self.llm_name,
-        #     # torch_dtype=torch.float16,
-        #     torch_dtype=torch.bfloat16,
-        #     device_map="auto",
-        #     model_kwargs={"cache_dir":self.cache_dir},
-        # )
-        
+       
         # Load the model using bf16 for optimized memory usage
         self.model = transformers.LlamaForCausalLM.from_pretrained(
             self.llm_name, 
             cache_dir=self.cache_dir, 
             torch_dtype=torch.bfloat16,
-            device_map="auto"  # Automatically split across available devices
+            device_map="auto",
         )
         
         self.follow_up = follow_up
@@ -67,22 +58,28 @@ class MedRAG:
             self.answer = self.medrag_answer
 
     def generate(self, messages):
-
-        stopping_criteria = None
+        # Apply the chat template to the messages
         prompt = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        
+        # Tokenize the prompt
+        inputs = self.tokenizer(prompt, return_tensors="pt", truncation=True, max_length=self.max_length)
+        
+        # Move the inputs to the appropriate device
+        inputs = {key: value.to(self.model.device) for key, value in inputs.items()}
 
-        response = self.model(
-            prompt,
-            do_sample=False,
+        # Use the generate method for text generation
+        outputs = self.model.generate(
+            inputs['input_ids'],
+            max_length=self.max_length,
             eos_token_id=self.tokenizer.eos_token_id,
             pad_token_id=self.tokenizer.eos_token_id,
-            max_length=self.max_length,
-            truncation=True,
-            stopping_criteria=stopping_criteria
+            do_sample=False,  # Set sampling to False for deterministic output
+            num_beams=1  # Change this if you want beam search or sampling
         )
-        # ans = response[0]["generated_text"]
-        ans = response[0]["generated_text"][len(prompt):]
-        return ans
+        
+        # Decode the generated output
+        ans = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return ans[len(prompt):]  # Return the generated text after the prompt
 
     def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir = None, snippets=None, snippets_ids=None, **kwargs):
 
