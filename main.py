@@ -53,7 +53,7 @@ for question_id, question_data in all_questions:
     # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer = rag.medrag_answer(question=question, options=options, k=5)
+        answer = rag.medrag_answer(question=question, options=options, k=1)
         
         # Debugging: Check the type and raw content of the answer
         print(f"Answer Type: {type(answer)}")
@@ -86,7 +86,7 @@ for question_id, question_data in all_questions:
             print(f"No valid answer choice extracted for question ID: {question_id}")
             continue
         
-        print(f"Correct Answer: {generated_choice}")
+        print(f"generated_choice: {generated_choice}")
         # Compare the generated answer with the correct one
         is_correct = correct_answer == generated_choice
         if is_correct:
