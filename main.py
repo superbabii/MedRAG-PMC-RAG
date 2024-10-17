@@ -103,7 +103,7 @@ for question_id, question_data in all_questions:
     # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer, snippets, scores = rag.medrag_answer(question=question, options=options, k=5)
+        answer = rag.medrag_answer(question=question, options=options, k=5)
         
         print(f"Generated Answer (Raw): {answer}")
         
