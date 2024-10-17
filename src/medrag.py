@@ -38,13 +38,22 @@ class MedRAG:
         
         self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
 
-        self.model = transformers.pipeline(
+        # self.model = transformers.pipeline(
+        #     "text-generation",
+        #     model=self.llm_name,
+        #     # torch_dtype=torch.float16,
+        #     torch_dtype=torch.bfloat16,
+        #     device_map="auto",
+        #     model_kwargs={"cache_dir":self.cache_dir},
+        # )
+        
+        # Load the model using bf16 for optimized memory usage
+        self.model = transformers.LlamaForCausalLM.from_pretrained(
             "text-generation",
-            model=self.llm_name,
-            # torch_dtype=torch.float16,
+            self.llm_name, 
             torch_dtype=torch.bfloat16,
             device_map="auto",
-            model_kwargs={"cache_dir":self.cache_dir},
+            model_kwargs={"cache_dir":self.cache_dir}
         )
         
         self.follow_up = follow_up
