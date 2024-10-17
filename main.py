@@ -23,7 +23,7 @@ with open('medqa.json', 'r') as f:
 all_questions = random.sample(list(benchmark_data.items()), 1)
 
 # Initialize the MedRAG system
-rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="Textbooks", HNSW=True)
+rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="RRF-4", corpus_name="Textbooks", HNSW=True)
 
 # Store the results of comparisons
 results = []
