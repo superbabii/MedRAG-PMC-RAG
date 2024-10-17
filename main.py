@@ -100,7 +100,7 @@ for question_id, question_data in all_questions:
 
     number_all_questions += 1
     # Use MedRAG to generate the answer with a timeout
-    signal.alarm(30)  # Set alarm for 60 seconds
+    # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
         generated_answer = cot.medrag_answer(question=question, options=options)
