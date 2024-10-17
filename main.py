@@ -103,12 +103,16 @@ for question_id, question_data in all_questions:
     # signal.alarm(120)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        generated_answer = rag.medrag_answer(question=question, options=options, k=5)
+        answer, snippets, scores = rag.medrag_answer(question=question, options=options, k=5)
         
-        print(f"Generated Answer (Raw): {generated_answer}")
+        print(f"Generated Answer (Raw): {answer}")
         
-        # Extract the generated answer choice
-        generated_choice = extract_answer_choice(generated_answer)
+        # Parse the generated answer and compare with correct answer
+        try:
+            generated_answer_dict = json.loads(answer)
+            generated_choice = generated_answer_dict.get('answer_choice', None)
+        except (json.JSONDecodeError, KeyError):
+            generated_choice = None
 
         if not generated_choice:
             print(f"No valid answer choice extracted for question ID: {question_id}")
