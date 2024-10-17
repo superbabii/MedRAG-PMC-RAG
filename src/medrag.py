@@ -45,27 +45,16 @@ class MedRAG:
         self._set_pad_token()
 
     def _set_pad_token(self):
-        # Check if tokenizer has a pad token
+        """Ensure tokenizer has a valid pad_token_id."""
         if self.tokenizer.pad_token is None:
-            # Add a pad token
-            special_tokens = {'pad_token': '[PAD]'}
-            self.tokenizer.add_special_tokens(special_tokens)
-            print("Added [PAD] token to the tokenizer.")
-
-            # Resize model embeddings to accommodate the new pad token
+            self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
             self.model.resize_token_embeddings(len(self.tokenizer))
 
-        # Set pad_token_id in the model configuration
         self.model.config.pad_token_id = self.tokenizer.pad_token_id
 
-        # Also set it in the generation config
-        self.model.generation_config.pad_token_id = self.tokenizer.pad_token_id
-
-        # Verify pad_token_id is positive
         if self.model.config.pad_token_id < 0:
-            raise ValueError(f"Invalid pad_token_id: {self.model.config.pad_token_id}. It should be a positive integer.")
-        else:
-            print("pad_token_id is valid and positive.")
+            raise ValueError(f"Invalid pad_token_id: {self.model.config.pad_token_id}.")
+
     
     def _generate_responses(self, messages):
         # Extract the 'content' field from each message
@@ -73,6 +62,8 @@ class MedRAG:
 
         # Join the content of the messages into a single string for processing
         input_text = "\n".join(text_inputs)
+        
+        print("Input to tokenizer:", input_text)
         
         inputs = self.tokenizer(
             input_text,
