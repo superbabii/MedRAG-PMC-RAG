@@ -6,7 +6,7 @@ from src.medrag import MedRAG
 
 
 # Load the benchmark JSON file
-with open('medqa.json', 'r') as f:
+with open('pubmedqa.json', 'r') as f:
     benchmark_data = json.load(f)
 
 # Get all questions
