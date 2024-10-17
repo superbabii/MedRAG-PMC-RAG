@@ -33,7 +33,7 @@ class MedRAG:
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.llm_name,
             cache_dir=self.cache_dir,
-            legacy=False  # Switch to new behavior
+            # legacy=False  # Switch to new behavior
         )
         
         self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
