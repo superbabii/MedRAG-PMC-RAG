@@ -41,56 +41,6 @@ def timeout_handler(signum, frame):
 # Set the timeout limit to 60 seconds
 signal.signal(signal.SIGALRM, timeout_handler)
 
-# Function to extract the answer choice
-def extract_answer_choice(generated_answer):
-
-    lines = generated_answer.split('\n')
-    option_map = {}
-    options_section = False
-    
-    for line in lines:
-        if re.match(r'^Options?:', line, re.IGNORECASE):
-            options_section = True
-            continue
-        if options_section:
-            option_match = re.match(r'^([A-D])\.\s*(.+)', line.strip(), re.IGNORECASE)
-            if option_match:
-                letter = option_match.group(1).upper()
-                text = option_match.group(2).strip().lower()
-                option_map[text] = letter
-            else:
-                # If the line doesn't match an option, end the options section
-                options_section = False
-    
-    # Look for "OPTION X IS CORRECT" or "ANSWER IS X"
-    match = re.search(r"OPTION\s+([A-D])\s+IS\s+CORRECT", generated_answer, re.IGNORECASE)
-    if match:
-        return match.group(1).upper()  # Return the extracted option (A, B, C, or D)
-    
-    # As a fallback, look for "ANSWER IS X"
-    match = re.search(r"ANSWER\s+IS\s+([A-D])", generated_answer, re.IGNORECASE)
-    if match:
-        return match.group(1).upper()
-    
-    # Look for "Answer: X" where X is a letter
-    match = re.search(r"Answer:\s*([A-D])", generated_answer, re.IGNORECASE)
-    if match:
-        return match.group(1).upper()
-    
-    # Look for "Answer: [Option Text]"
-    match = re.search(r"Answer:\s*([A-Da-d])", generated_answer, re.IGNORECASE)
-    if match:
-        # This handles cases like "Answer: A"
-        return match.group(1).upper()
-    else:
-        # Attempt to extract the answer text and map it to the corresponding option letter
-        answer_text_match = re.search(r"Answer:\s*(.+)", generated_answer, re.IGNORECASE)
-        if answer_text_match:
-            answer_text = answer_text_match.group(1).strip().lower()
-            return option_map.get(answer_text, None)
-    
-    return None  # If no valid option is found, return None
-
 # Iterate over each question and get the generated answer
 for question_id, question_data in all_questions:
     # Extract the question, options, and correct answer
@@ -105,15 +55,23 @@ for question_id, question_data in all_questions:
         # Use MedRAG to generate the answer
         answer = rag.medrag_answer(question=question, options=options, k=1)
         
+        # Debugging: Check the type and raw content of the answer
+        print(f"Answer Type: {type(answer)}")
+        print(f"Generated Answer (Raw): {answer}")
+        
         if isinstance(answer, tuple):
             answer = answer[0]
             
         # Handle cases where the answer is empty or too short
-        if not answer or answer.strip() == ".":
-            print(f"Generated Answer is empty or incomplete for question ID: {question_id}")
-            continue
-        
-        print(f"Generated Answer (Raw): {answer}")
+        if not answer or len(answer.strip()) <= 1:
+            print(f"Generated Answer is empty or incomplete for question ID: {question_id}, retrying...")
+            retry_answer = rag.medrag_answer(question=question, options=options, k=1)
+            if isinstance(retry_answer, tuple):
+                retry_answer = retry_answer[0]
+            if not retry_answer or len(retry_answer.strip()) <= 1:
+                print(f"Retry failed for question ID: {question_id}, skipping.")
+                continue
+            answer = retry_answer
         
         # Parse the generated answer and compare with correct answer
         try:
