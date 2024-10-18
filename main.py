@@ -46,6 +46,13 @@ def extract_answer_choice(generated_answer):
     option_map = {}
     options_section = False
     
+    # Map common answer words to corresponding option letters
+    word_to_option = {
+        "yes": "A",
+        "no": "B",
+        "maybe": "C"
+    }
+    
     for line in lines:
         if re.match(r'^Options?:', line, re.IGNORECASE):
             options_section = True
@@ -80,6 +87,15 @@ def extract_answer_choice(generated_answer):
     if match:
         # This handles cases like "Answer: A"
         return match.group(1).upper()
+    # Look for implicit answers that start with "Yes", "No", or "Maybe"
+    for line in lines:
+        line = line.strip().lower()
+        if line.startswith(": yes,"):
+            return "A"
+        elif line.startswith(": no,"):
+            return "B"
+        elif line.startswith(": maybe,"):
+            return "C"
     else:
         # Attempt to extract the answer text and map it to the corresponding option letter
         answer_text_match = re.search(r"Answer:\s*(.+)", generated_answer, re.IGNORECASE)
