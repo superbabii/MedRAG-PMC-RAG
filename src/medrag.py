@@ -6,7 +6,8 @@ import transformers
 from transformers import AutoTokenizer
 import sys
 sys.path.append("src")
-from utils import RetrievalSystem, DocExtracter
+from utils import RetrievalSystem
+# , DocExtracter
 from template import *
 
 class MedRAG:

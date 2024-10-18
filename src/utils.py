@@ -323,64 +323,64 @@ class RetrievalSystem:
         return texts, scores
     
 
-class DocExtracter:
+# class DocExtracter:
     
-    def __init__(self, db_dir="./corpus", cache=False, corpus_name="MedCorp"):
-        self.db_dir = db_dir
-        self.cache = cache
-        print("Initializing the document extracter...")
-        for corpus in corpus_names[corpus_name]:
-            if not os.path.exists(os.path.join(self.db_dir, corpus, "chunk")):
-                print("Cloning the {:s} corpus from Huggingface...".format(corpus))
-                os.system("git clone https://huggingface.co/datasets/MedRAG/{:s} {:s}".format(corpus, os.path.join(self.db_dir, corpus)))
-                if corpus == "statpearls":
-                    print("Downloading the statpearls corpus from NCBI bookshelf...")
-                    os.system("wget https://ftp.ncbi.nlm.nih.gov/pub/litarch/3d/12/statpearls_NBK430685.tar.gz -P {:s}".format(os.path.join(self.db_dir, corpus)))
-                    os.system("tar -xzvf {:s} -C {:s}".format(os.path.join(self.db_dir, corpus, "statpearls_NBK430685.tar.gz"), os.path.join(self.db_dir, corpus)))
-                    print("Chunking the statpearls corpus...")
-                    os.system("python src/data/statpearls.py")
-        if self.cache:
-            if os.path.exists(os.path.join(self.db_dir, "_".join([corpus_name, "id2text.json"]))):
-                self.dict = json.load(open(os.path.join(self.db_dir, "_".join([corpus_name, "id2text.json"]))))
-            else:
-                self.dict = {}
-                for corpus in corpus_names[corpus_name]:
-                    for fname in tqdm.tqdm(sorted(os.listdir(os.path.join(self.db_dir, corpus, "chunk")))):
-                        if open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip() == "":
-                            continue
-                        for i, line in enumerate(open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip().split('\n')):
-                            item = json.loads(line)
-                            _ = item.pop("contents", None)
-                            # assert item["id"] not in self.dict
-                            self.dict[item["id"]] = item
-                with open(os.path.join(self.db_dir, "_".join([corpus_name, "id2text.json"])), 'w') as f:
-                    json.dump(self.dict, f)
-        else:
-            if os.path.exists(os.path.join(self.db_dir, "_".join([corpus_name, "id2path.json"]))):
-                self.dict = json.load(open(os.path.join(self.db_dir, "_".join([corpus_name, "id2path.json"]))))
-            else:
-                self.dict = {}
-                for corpus in corpus_names[corpus_name]:
-                    for fname in tqdm.tqdm(sorted(os.listdir(os.path.join(self.db_dir, corpus, "chunk")))):
-                        if open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip() == "":
-                            continue
-                        for i, line in enumerate(open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip().split('\n')):
-                            item = json.loads(line)
-                            # assert item["id"] not in self.dict
-                            self.dict[item["id"]] = {"fpath": os.path.join(corpus, "chunk", fname), "index": i}
-                with open(os.path.join(self.db_dir, "_".join([corpus_name, "id2path.json"])), 'w') as f:
-                    json.dump(self.dict, f, indent=4)
-        print("Initialization finished!")
+#     def __init__(self, db_dir="./corpus", cache=False, corpus_name="MedCorp"):
+#         self.db_dir = db_dir
+#         self.cache = cache
+#         print("Initializing the document extracter...")
+#         for corpus in corpus_names[corpus_name]:
+#             if not os.path.exists(os.path.join(self.db_dir, corpus, "chunk")):
+#                 print("Cloning the {:s} corpus from Huggingface...".format(corpus))
+#                 os.system("git clone https://huggingface.co/datasets/MedRAG/{:s} {:s}".format(corpus, os.path.join(self.db_dir, corpus)))
+#                 if corpus == "statpearls":
+#                     print("Downloading the statpearls corpus from NCBI bookshelf...")
+#                     os.system("wget https://ftp.ncbi.nlm.nih.gov/pub/litarch/3d/12/statpearls_NBK430685.tar.gz -P {:s}".format(os.path.join(self.db_dir, corpus)))
+#                     os.system("tar -xzvf {:s} -C {:s}".format(os.path.join(self.db_dir, corpus, "statpearls_NBK430685.tar.gz"), os.path.join(self.db_dir, corpus)))
+#                     print("Chunking the statpearls corpus...")
+#                     os.system("python src/data/statpearls.py")
+#         if self.cache:
+#             if os.path.exists(os.path.join(self.db_dir, "_".join([corpus_name, "id2text.json"]))):
+#                 self.dict = json.load(open(os.path.join(self.db_dir, "_".join([corpus_name, "id2text.json"]))))
+#             else:
+#                 self.dict = {}
+#                 for corpus in corpus_names[corpus_name]:
+#                     for fname in tqdm.tqdm(sorted(os.listdir(os.path.join(self.db_dir, corpus, "chunk")))):
+#                         if open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip() == "":
+#                             continue
+#                         for i, line in enumerate(open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip().split('\n')):
+#                             item = json.loads(line)
+#                             _ = item.pop("contents", None)
+#                             # assert item["id"] not in self.dict
+#                             self.dict[item["id"]] = item
+#                 with open(os.path.join(self.db_dir, "_".join([corpus_name, "id2text.json"])), 'w') as f:
+#                     json.dump(self.dict, f)
+#         else:
+#             if os.path.exists(os.path.join(self.db_dir, "_".join([corpus_name, "id2path.json"]))):
+#                 self.dict = json.load(open(os.path.join(self.db_dir, "_".join([corpus_name, "id2path.json"]))))
+#             else:
+#                 self.dict = {}
+#                 for corpus in corpus_names[corpus_name]:
+#                     for fname in tqdm.tqdm(sorted(os.listdir(os.path.join(self.db_dir, corpus, "chunk")))):
+#                         if open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip() == "":
+#                             continue
+#                         for i, line in enumerate(open(os.path.join(self.db_dir, corpus, "chunk", fname)).read().strip().split('\n')):
+#                             item = json.loads(line)
+#                             # assert item["id"] not in self.dict
+#                             self.dict[item["id"]] = {"fpath": os.path.join(corpus, "chunk", fname), "index": i}
+#                 with open(os.path.join(self.db_dir, "_".join([corpus_name, "id2path.json"])), 'w') as f:
+#                     json.dump(self.dict, f, indent=4)
+#         print("Initialization finished!")
     
-    def extract(self, ids):
-        if self.cache:
-            output = []
-            for i in ids:
-                item = self.dict[i] if type(i) == str else self.dict[i["id"]]
-                output.append(item)
-        else:
-            output = []
-            for i in ids:
-                item = self.dict[i] if type(i) == str else self.dict[i["id"]]
-                output.append(json.loads(open(os.path.join(self.db_dir, item["fpath"])).read().strip().split('\n')[item["index"]]))
-        return output
+#     def extract(self, ids):
+#         if self.cache:
+#             output = []
+#             for i in ids:
+#                 item = self.dict[i] if type(i) == str else self.dict[i["id"]]
+#                 output.append(item)
+#         else:
+#             output = []
+#             for i in ids:
+#                 item = self.dict[i] if type(i) == str else self.dict[i["id"]]
+#                 output.append(json.loads(open(os.path.join(self.db_dir, item["fpath"])).read().strip().split('\n')[item["index"]]))
+#         return output
