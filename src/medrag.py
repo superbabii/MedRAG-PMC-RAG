@@ -105,14 +105,14 @@ class MedRAG:
     
     def _retrieve_context(self, question, k, rrf_k, snippets=None, snippets_ids=None):
         """Retrieve relevant contexts or snippets based on the question."""
-        if snippets is not None:
-            retrieved_snippets = snippets[:k]
-        elif snippets_ids is not None:
-            if self.docExt is None:
-                self.docExt = DocExtracter(db_dir=self.db_dir, cache=True, corpus_name=self.corpus_name)
-            retrieved_snippets = self.docExt.extract(snippets_ids[:k])
-        else:
-            retrieved_snippets, _ = self.retrieval_system.retrieve(question, k=k, rrf_k=rrf_k)
+        # if snippets is not None:
+        #     retrieved_snippets = snippets[:k]
+        # elif snippets_ids is not None:
+        #     if self.docExt is None:
+        #         self.docExt = DocExtracter(db_dir=self.db_dir, cache=True, corpus_name=self.corpus_name)
+        #     retrieved_snippets = self.docExt.extract(snippets_ids[:k])
+        # else:
+        retrieved_snippets, _ = self.retrieval_system.retrieve(question, k=k, rrf_k=rrf_k)
         
         contexts = ["Document [{:d}] (Title: {:s}) {:s}".format(idx, snip["title"], snip["content"]) for idx, snip in enumerate(retrieved_snippets)]
         return contexts if contexts else [""]
