@@ -163,5 +163,12 @@ for question_id, question_data in all_questions:
     except TimeoutException:
         print(f"Skipping question ID: {question_id} due to timeout.")
         continue
+    
+# Print the number of all questions
+print(f"Total number of questions: {answered_questions}")
+
+# Calculate accuracy
+accuracy = correct_count / answered_questions * 100 if answered_questions > 0 else 0
+print(f"Accuracy: {accuracy:.2f}%")
 
 
