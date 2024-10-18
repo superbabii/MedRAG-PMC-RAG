@@ -16,6 +16,7 @@ corpus_names = {
     "MedText": ["textbooks", "statpearls"],
     "MedCorp": ["pubmed", "textbooks", "statpearls", "wikipedia"],
     "Nazar": ["pubmed", "wikipedia"],
+    "BioBERT": ["dmis-lab/biobert-base-cased-v1.1"],
 }
 
 retriever_names = {
@@ -25,7 +26,7 @@ retriever_names = {
     "MedCPT": ["ncbi/MedCPT-Query-Encoder"],
     "RRF-2": ["bm25", "ncbi/MedCPT-Query-Encoder"],
     "RRF-4": ["bm25", "facebook/contriever", "allenai/specter", "ncbi/MedCPT-Query-Encoder"],
-    "RRF-3": ["facebook/contriever", "allenai/specter", "ncbi/MedCPT-Query-Encoder"],
+    "RRF-nazar": ["ncbi/MedCPT-Query-Encoder", "facebook/contriever"],
 }
 
 def ends_with_ending_punctuation(s):

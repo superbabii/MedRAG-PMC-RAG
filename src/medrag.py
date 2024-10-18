@@ -178,7 +178,6 @@ class MedRAG:
         self.model = transformers.pipeline(
             "text-generation",
             model=self.llm_name,
-            # torch_dtype=torch.float16,
             torch_dtype=torch.bfloat16,
             device_map="auto",
             model_kwargs={"cache_dir":self.cache_dir},
