@@ -47,7 +47,7 @@ class MedRAG:
             device_map="auto"  # Automatically split across available devices
         )
 
-        self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
+        # self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
 
         # Check if CUDA is available (for other use cases, but no need to move model manually)
         if torch.cuda.is_available():
@@ -127,10 +127,21 @@ class MedRAG:
 
         answers = []
         for context in contexts:
-            prompt = self.templates["medrag_prompt"].render(context=context, question=question, options=options_text)
-            messages = [{"role": "system", "content": self.templates["medrag_system"]}, {"role": "user", "content": prompt}]
-            answer = self._generate_responses(messages)
-            answers.append(re.sub(r"\s+", " ", answer))
+            # prompt = self.templates["medrag_prompt"].render(context=context, question=question, options=options_text)
+            # messages = [{"role": "system", "content": self.templates["medrag_system"]}, {"role": "user", "content": prompt}]
+            # answer = self._generate_responses(messages)
+            # answers.append(re.sub(r"\s+", " ", answer))
+            prompt = f"Context: {context}\nQuestion: {question}\nOptions:\n{options_text}\nAnswer:"
+        
+            try:
+                # Generate the answer and clean up extra whitespace
+                answer = self._generate_responses(prompt).strip()
+                cleaned_answer = re.sub(r"\s+", " ", answer)
+                answers.append(cleaned_answer)
+            except Exception as e:
+                # Handle potential errors during generation
+                print(f"Error generating answer: {e}")
+                answers.append("")
 
         # Save results if required
         if save_dir:
