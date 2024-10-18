@@ -47,7 +47,7 @@ class MedRAG:
             device_map="auto"  # Automatically split across available devices
         )
 
-        # self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
+        self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
 
         # Check if CUDA is available (for other use cases, but no need to move model manually)
         if torch.cuda.is_available():
