@@ -48,14 +48,23 @@ def extract_answer_choice(generated_answer):
         "maybe": "C"
     }
 
-    # Extract 'yes', 'no', or 'maybe' from the text
-    matches = re.findall(r"(yes|no|maybe)", generated_answer, re.IGNORECASE)
-    if matches:
-        # Take the last occurrence and map it to the corresponding option
-        last_answer_text = matches[-1].strip().lower()
-        return word_to_option.get(last_answer_text, None)
+    # Check for "OPTION X IS CORRECT"
+    option_correct_match = re.search(r"OPTION\s+([A-D])\s+IS\s+CORRECT", generated_answer, re.IGNORECASE)
+    if option_correct_match:
+        return option_correct_match.group(1).upper()
 
-    return None
+    # Check for "Answer: X" where X is a letter
+    answer_letter_match = re.search(r"Answer:\s*([A-D])", generated_answer, re.IGNORECASE)
+    if answer_letter_match:
+        return answer_letter_match.group(1).upper()
+
+    # Extract 'yes', 'no', or 'maybe' from the text, taking the last occurrence
+    matches = re.findall(r"\b(yes|no|maybe)\b", generated_answer, re.IGNORECASE)
+    if matches:
+        last_answer_text = matches[-1].strip().lower()
+        return word_to_option.get(last_answer_text)
+
+    return None  # Return None if no valid option is found
 
 # def extract_answer_choice(generated_answer):
 
