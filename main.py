@@ -170,13 +170,15 @@ for question_id, question_data in all_questions:
         answer = rag.medrag_answer(question=question, options=options, k=1)
         # print(f"Score: {scores}")
         # Debugging: Check the type and raw content of the answer
-        print(f"Generated Answer (Raw): {answer}")
+        # print(f"Generated Answer (Raw): {answer}")
         
         # Check if the generated answer is a tuple and extract the text
         if isinstance(answer, tuple):
             generated_answer_text = answer[0]
         else:
             generated_answer_text = answer
+        
+        print(f"Generated Answer: {generated_answer_text}")
         
         # Extract the generated answer choice
         generated_choice = extract_answer_choice(generated_answer_text)
