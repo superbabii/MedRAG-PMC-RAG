@@ -96,6 +96,11 @@ def extract_answer_choice(generated_answer):
     if match:
         answer_text = match.group(1).strip().lower()
         return word_to_option.get(answer_text, None)
+    # Check for ". [answer]"
+    match = re.search(r".\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
+    if match:
+        answer_text = match.group(1).strip().lower()
+        return word_to_option.get(answer_text, None)
     # Look for patterns like "the answer is yes/no/maybe"
     match = re.search(r"answer is\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
     if match:
