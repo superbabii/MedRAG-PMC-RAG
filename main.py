@@ -22,7 +22,7 @@ all_questions = all_questions[:1000]
 # all_questions = random.sample(list(benchmark_data.items()), 5)
 
 # Initialize the MedRAG system
-rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="PubMed", corpus_cache=True, HNSW=True)
+rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=False, retriever_name="MedCPT", corpus_name="PubMed", corpus_cache=True, HNSW=True)
 
 # Store the results of comparisons
 results = []
