@@ -5,7 +5,7 @@ import signal
 from src.medrag import MedRAG
 
 # Load the benchmark JSON file
-with open('pubmedqa.json', 'r') as f:
+with open('mmlu-med.json', 'r') as f:
     benchmark_data = json.load(f)
 
 # Get all questions
@@ -57,6 +57,11 @@ def extract_answer_choice(generated_answer):
     answer_letter_match = re.search(r"Answer:\s*([A-D])", generated_answer, re.IGNORECASE)
     if answer_letter_match:
         return answer_letter_match.group(1).upper()
+    
+    # Check for "The answer is choice X" where X is a letter
+    choice_match = re.search(r"The answer is choice\s*([A-D])", generated_answer, re.IGNORECASE)
+    if choice_match:
+        return choice_match.group(1).upper()
 
     # Extract 'yes', 'no', or 'maybe' from the text, taking the last occurrence
     matches = re.findall(r"\b(yes|no|maybe)\b", generated_answer, re.IGNORECASE)
