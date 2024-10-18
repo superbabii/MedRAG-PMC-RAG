@@ -9,17 +9,17 @@ with open('pubmedqa.json', 'r') as f:
     benchmark_data = json.load(f)
 
 # Get all questions
-# all_questions = list(benchmark_data.items())
+all_questions = list(benchmark_data.items())
 
 # Limit to the first 200 questions
-# all_questions = all_questions[:1000]
+all_questions = all_questions[:1000]
 # all_questions = all_questions[600:1000]
 # all_questions = all_questions[400:600]
 # all_questions = all_questions[600:800]
 # all_questions = all_questions[800:1000]
 
 # Get random questions
-all_questions = random.sample(list(benchmark_data.items()), 5)
+# all_questions = random.sample(list(benchmark_data.items()), 5)
 
 # Initialize the MedRAG system
 rag = MedRAG(llm_name="axiong/PMC_LLaMA_13B", rag=True, retriever_name="MedCPT", corpus_name="PubMed", corpus_cache=True, HNSW=True)
