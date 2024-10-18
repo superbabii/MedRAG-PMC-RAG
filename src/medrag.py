@@ -43,7 +43,7 @@ class MedRAG:
             self.llm_name, 
             cache_dir=self.cache_dir, 
             torch_dtype=torch.bfloat16,
-            device_map="auto"  # Automatically split across available devices
+            device_map="auto"
         )
 
         # self.tokenizer.chat_template = open('./templates/pmc_llama.jinja').read().replace('    ', '').replace('\n', '')
