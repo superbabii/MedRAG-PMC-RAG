@@ -126,8 +126,8 @@ for question_id, question_data in all_questions:
     signal.alarm(600)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer, scores = rag.medrag_answer(question=question, options=options, k=1)
-        print(f"Score: {scores}")
+        answer = rag.medrag_answer(question=question, options=options, k=1)
+        # print(f"Score: {scores}")
         # Debugging: Check the type and raw content of the answer
         print(f"Generated Answer (Raw): {answer}")
         
