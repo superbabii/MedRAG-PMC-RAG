@@ -69,7 +69,7 @@ class MedRAG:
             self.model.resize_token_embeddings(len(self.tokenizer))
         self.model.config.pad_token_id = self.tokenizer.pad_token_id
     
-    def _generate_responses(self, messages):
+    def generate(self, messages):
         # Extract the "content" field from the user's message
         user_message = next((msg['content'] for msg in messages if msg['role'] == 'user'), "")
         
