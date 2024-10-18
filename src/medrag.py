@@ -117,24 +117,64 @@ class MedRAG:
         contexts = ["Document [{:d}] (Title: {:s}) {:s}".format(idx, snip["title"], snip["content"]) for idx, snip in enumerate(retrieved_snippets)]
         return contexts if contexts else [""]
 
-    def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir=None, snippets=None, snippets_ids=None):
-        # Build the options text efficiently
-        options_text = '\n'.join([f"{key}. {options[key]}" for key in sorted(options.keys())]) if options else ''
-        
-        # Retrieve relevant contexts
-        contexts = self._retrieve_context(question, k, rrf_k, snippets, snippets_ids) if self.rag else [""]
+    def medrag_answer(self, question, options=None, k=32, rrf_k=100, save_dir = None, snippets=None, snippets_ids=None, **kwargs):
 
+        if options is not None:
+            options = '\n'.join([key+". "+options[key] for key in sorted(options.keys())])
+        else:
+            options = ''
+
+        # retrieve relevant snippets
+        if self.rag:
+            if snippets is not None:
+                retrieved_snippets = snippets[:k]
+                scores = []
+            elif snippets_ids is not None:
+                if self.docExt is None:
+                    self.docExt = DocExtracter(db_dir=self.db_dir, cache=True, corpus_name=self.corpus_name)
+                retrieved_snippets = self.docExt.extract(snippets_ids[:k])
+                scores = []
+            else:
+                assert self.retrieval_system is not None
+                retrieved_snippets, scores = self.retrieval_system.retrieve(question, k=k, rrf_k=rrf_k)
+
+            contexts = ["Document [{:d}] (Title: {:s}) {:s}".format(idx, retrieved_snippets[idx]["title"], retrieved_snippets[idx]["content"]) for idx in range(len(retrieved_snippets))]
+            if len(contexts) == 0:
+                contexts = [""]
+
+            contexts = [self.tokenizer.decode(self.tokenizer.encode("\n".join(contexts), add_special_tokens=False)[:self.context_length])]
+        else:
+            retrieved_snippets = []
+            scores = []
+            contexts = []
+
+        if save_dir is not None and not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # generate answers
         answers = []
-        for context in contexts:
-            prompt = self.templates["medrag_prompt"].render(context=context, question=question, options=options_text)
-            messages = [{"role": "system", "content": self.templates["medrag_system"]}, {"role": "user", "content": prompt}]
-            answer = self._generate_responses(messages)
-            answers.append(re.sub(r"\s+", " ", answer))
-
-        # Save results if required
-        if save_dir:
-            os.makedirs(save_dir, exist_ok=True)
+        if not self.rag:
+            prompt_cot = self.templates["cot_prompt"].render(question=question, options=options)
+            messages = [
+                {"role": "system", "content": self.templates["cot_system"]},
+                {"role": "user", "content": prompt_cot}
+            ]
+            ans = self.generate(messages)
+            answers.append(re.sub("\s+", " ", ans))
+        else:
+            for context in contexts:
+                prompt_medrag = self.templates["medrag_prompt"].render(context=context, question=question, options=options)
+                messages=[
+                        {"role": "system", "content": self.templates["medrag_system"]},
+                        {"role": "user", "content": prompt_medrag}
+                ]
+                ans = self.generate(messages)
+                answers.append(re.sub("\s+", " ", ans))
+        
+        if save_dir is not None:
+            with open(os.path.join(save_dir, "snippets.json"), 'w') as f:
+                json.dump(retrieved_snippets, f, indent=4)
             with open(os.path.join(save_dir, "response.json"), 'w') as f:
                 json.dump(answers, f, indent=4)
-
-        return answers[0] if len(answers) == 1 else answers
+        
+        return answers[0] if len(answers)==1 else answers, scores

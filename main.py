@@ -91,6 +91,11 @@ def extract_answer_choice(generated_answer):
     if match:
         answer_text = match.group(1).strip().lower()
         return word_to_option.get(answer_text, None)
+    # Look for patterns like "the answer is yes/no/maybe"
+    match = re.search(r"answer is\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
+    if match:
+        answer_text = match.group(1).strip().lower()
+        return word_to_option.get(answer_text, None)  # Map "yes", "no", "maybe" to A, B, C
     # Look for implicit answers that start with "Yes", "No", or "Maybe"
     for line in lines:
         line = line.strip().lower()
@@ -118,11 +123,11 @@ for question_id, question_data in all_questions:
 
     number_all_questions += 1
     # Use MedRAG to generate the answer with a timeout
-    signal.alarm(200)  # Set alarm for 60 seconds
+    signal.alarm(300)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer = rag.medrag_answer(question=question, options=options, k=1)
-        # print(f"Score: {scores}")
+        answer, scores = rag.medrag_answer(question=question, options=options, k=1)
+        print(f"Score: {scores}")
         # Debugging: Check the type and raw content of the answer
         print(f"Generated Answer (Raw): {answer}")
         
