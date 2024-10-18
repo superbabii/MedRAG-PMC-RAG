@@ -87,6 +87,10 @@ def extract_answer_choice(generated_answer):
     if match:
         # This handles cases like "Answer: A"
         return match.group(1).upper()
+    match = re.search(r"Answer:\s*(.+)", generated_answer, re.IGNORECASE)
+    if match:
+        answer_text = match.group(1).strip().lower()
+        return word_to_option.get(answer_text, None)
     # Look for implicit answers that start with "Yes", "No", or "Maybe"
     for line in lines:
         line = line.strip().lower()
