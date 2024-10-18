@@ -92,7 +92,7 @@ def extract_answer_choice(generated_answer):
         answer_text = match.group(1).strip().lower()
         return word_to_option.get(answer_text, None)
     # Check for "The output: [answer]"
-    match = re.search(r"output:\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
+    match = re.search(r"The output:\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
     if match:
         answer_text = match.group(1).strip().lower()
         return word_to_option.get(answer_text, None)
@@ -102,7 +102,7 @@ def extract_answer_choice(generated_answer):
         answer_text = match.group(1).strip().lower()
         return word_to_option.get(answer_text, None)
     # Look for patterns like "the answer is yes/no/maybe"
-    match = re.search(r"answer is\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
+    match = re.search(r"The answer is\s*(yes|no|maybe)", generated_answer, re.IGNORECASE)
     if match:
         answer_text = match.group(1).strip().lower()
         return word_to_option.get(answer_text, None)  # Map "yes", "no", "maybe" to A, B, C
