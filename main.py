@@ -62,6 +62,11 @@ def extract_answer_choice(generated_answer):
     choice_match = re.search(r"The answer is choice\s*([A-D])", generated_answer, re.IGNORECASE)
     if choice_match:
         return choice_match.group(1).upper()
+    
+    # Check for "The answer is choice X" where X is a letter
+    choice_match = re.search(r"The answer is option\s*([A-D])", generated_answer, re.IGNORECASE)
+    if choice_match:
+        return choice_match.group(1).upper()
 
     # Extract 'yes', 'no', or 'maybe' from the text, taking the last occurrence
     matches = re.findall(r"\b(yes|no|maybe)\b", generated_answer, re.IGNORECASE)
@@ -167,7 +172,7 @@ for question_id, question_data in all_questions:
     signal.alarm(600)  # Set alarm for 60 seconds
     try:
         # Use MedRAG to generate the answer
-        answer = rag.medrag_answer(question=question, options=options, k=1)
+        answer = rag.medrag_answer(question=question, options=options, k=32)
         # print(f"Score: {scores}")
         # Debugging: Check the type and raw content of the answer
         # print(f"Generated Answer (Raw): {answer}")
