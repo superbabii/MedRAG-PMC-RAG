@@ -64,6 +64,11 @@ def extract_answer_choice(generated_answer):
         return choice_match.group(1).upper()
     
     # Check for "The answer is choice X" where X is a letter
+    choice_match = re.search(r"answer is\s*([A-D])", generated_answer, re.IGNORECASE)
+    if choice_match:
+        return choice_match.group(1).upper()
+    
+    # Check for "The answer is choice X" where X is a letter
     choice_match = re.search(r"The answer is option\s*([A-D])", generated_answer, re.IGNORECASE)
     if choice_match:
         return choice_match.group(1).upper()
